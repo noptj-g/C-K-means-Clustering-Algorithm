@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 新科技學程小專題競賽 - K-means 分群示範</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        pre {
+            background-color: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>使用 K-means 分群演算法預測股市走勢</h1>
+    <h2>程式碼展示</h2>
+    
+    <h3>C++ 程式碼</h3>
+    <pre><code>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+// 結構體：代表每個數據點（股市數據）
+struct DataPoint {
+    double openPrice;
+    double closePrice;
+    double highPrice;
+    double lowPrice;
+};
+
+// 計算兩個數據點之間的歐幾里得距離
+double euclideanDistance(const DataPoint& a, const DataPoint& b) {
+    return sqrt(pow(a.openPrice - b.openPrice, 2) +
+                pow(a.closePrice - b.closePrice, 2) +
+                pow(a.highPrice - b.highPrice, 2) +
+                pow(a.lowPrice - b.lowPrice, 2));
+}
+
+// K-means 算法實現
+void kMeansClustering(vector<DataPoint>& data, int k) {
+    // 隨機初始化 k 個中心點
+    vector<DataPoint> centroids(k);
+    srand(time(0));
+    for (int i = 0; i < k; ++i) {
+        centroids[i] = data[rand() % data.size()];
+    }
+
+    vector<int> labels(data.size(), -1); // 記錄每個數據點的簇標籤
+    bool changed = true;
+    
+    while (changed) {
+        changed = false;
+
+        // 步驟 1：為每個數據點分配一個最近的中心點
+        for (int i = 0; i < data.size(); ++i) {
+            int closestCentroid = -1;
+            double minDist = INFINITY;
+
+            for (int j = 0; j < k; ++j) {
+                double dist = euclideanDistance(data[i], centroids[j]);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestCentroid = j;
+                }
+            }
+
+            // 如果標籤改變了，標記變化
+            if (labels[i] != closestCentroid) {
+                labels[i] = closestCentroid;
+                changed = true;
+            }
+        }
+
+        // 步驟 2：更新每個簇的中心點
+        vector<DataPoint> newCentroids(k, {0, 0, 0, 0});
+        vector<int> count(k, 0);
+
+        for (int i = 0; i < data.size(); ++i) {
+            newCentroids[labels[i]].openPrice += data[i].openPrice;
+            newCentroids[labels[i]].closePrice += data[i].closePrice;
+            newCentroids[labels[i]].highPrice += data[i].highPrice;
+            newCentroids[labels[i]].lowPrice += data[i].lowPrice;
+            count[labels[i]]++;
+        }
+
+        for (int i = 0; i < k; ++i) {
+            if (count[i] > 0) {
+                newCentroids[i].openPrice /= count[i];
+                newCentroids[i].closePrice /= count[i];
+                newCentroids[i].highPrice /= count[i];
+                newCentroids[i].lowPrice /= count[i];
+            }
+        }
+
+        centroids = newCentroids; // 更新中心點
+    }
+
+    // 輸出結果
+    for (int i = 0; i < k; ++i) {
+        cout << "Cluster " << i + 1 << " centroid: (" 
+             << centroids[i].openPrice << ", "
+             << centroids[i].closePrice << ", "
+             << centroids[i].highPrice << ", "
+             << centroids[i].lowPrice << ")" << endl;
+    }
+
+    // 輸出每個數據點所屬的群組
+    for (int i = 0; i < data.size(); ++i) {
+        cout << "DataPoint " << i + 1 << " is in cluster " << labels[i] + 1 << endl;
+    }
+}
+
+int main() {
+    // 假設這是股市數據的簡化形式（開盤價、收盤價、最高價、最低價）
+    vector<DataPoint> data = {
+        {100, 110, 115, 95},
+        {105, 115, 120, 100},
+        {98, 105, 110, 95},
+        {120, 130, 135, 110},
+        {125, 135, 140, 120},
+        {110, 120, 125, 105},
+    };
+
+    int k = 3;  // 假設我們要分為 3 個群組
+    kMeansClustering(data, k);
+
+    return 0;
+}
+    </code></pre>
+
+</body>
+</html>
